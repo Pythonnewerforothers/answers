@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#080c15">
+<title>答案之书 v0.1 · 好话版 · The Book of Answers</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230b1424'/%3E%3Cpath d='M31 20 L15 23 v20 l16-3.5 16 3.5 V23 Z' fill='%23e3c68e'/%3E%3Cpath d='M32 20.6 V40' stroke='%238a7238' stroke-width='1.6'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --stage: min(820px, 92vw, 104vh);
+    --u: calc(var(--stage) / 780);
+    --gold: #e8ce96;
+    --gold-soft: rgba(232,206,150,.55);
+    --gold-dim: rgba(232,206,150,.16);
+    --ink: #eee8db;
+    --muted: #7d8ba4;
+    --card-w: 604;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{ height: 100%; }
+
+  body{
+    margin: 0;
+    background:
+      radial-gradient(120% 85% at 50% 0%, #12203a 0%, rgba(18,32,58,0) 55%),
+      linear-gradient(180deg, #0a101c 0%, #06090f 100%);
+    color: var(--ink);
+    font-family: "Microsoft YaHei UI Light", "Microsoft YaHei UI", "Microsoft YaHei",
+                 "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", sans-serif;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ---------- 背景层 ---------- */
+  #dust{ position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+  .vignette{
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: radial-gradient(115% 88% at 50% 46%, rgba(0,0,0,0) 38%, rgba(2,4,8,.72) 100%);
+  }
+
+  .aura{
+    position: fixed; left: 50%; top: 47%; width: 110vmin; height: 82vmin;
+    transform: translate(-50%, -50%);
+    pointer-events: none; z-index: 0;
+    background: radial-gradient(closest-side, rgba(232,197,133,.17), rgba(232,197,133,.06) 55%, rgba(232,197,133,0) 100%);
+    animation: breathe 9s ease-in-out infinite;
+  }
+
+  @keyframes breathe{
+    0%, 100%{ opacity: .55; transform: translate(-50%, -50%) scale(1); }
+    50%{ opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
+  }
+
+  /* ---------- 舞台 ---------- */
+  .stage{
+    position: relative; z-index: 2;
+    width: var(--stage);
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: calc(52 * var(--u));
+    padding-bottom: calc(26 * var(--u));
+  }
+
+  /* ---------- 标题 ---------- */
+  h1{
+    margin: 0;
+    font-size: calc(30 * var(--u));
+    font-weight: 300;
+    letter-spacing: calc(15 * var(--u));
+    text-indent: calc(15 * var(--u));      /* 抵消末字后多出的字距，保持视觉居中 */
+    color: #ecd6a4;
+    text-shadow: 0 calc(2 * var(--u)) calc(12 * var(--u)) rgba(0,0,0,.55),
+                 0 0 calc(28 * var(--u)) rgba(232,206,150,.16);
+    white-space: nowrap;
+  }
+
+  .rule{
+    display: flex; align-items: center; justify-content: center;
+    gap: calc(13 * var(--u));
+    margin-top: calc(11 * var(--u));
+    width: calc(160 * var(--u));
+  }
+  .rule i{
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(232,206,150,0), rgba(232,206,150,.42));
+  }
+  .rule i:last-child{
+    background: linear-gradient(90deg, rgba(232,206,150,.42), rgba(232,206,150,0));
+  }
+  .dia{
+    width: calc(7 * var(--u)); height: calc(7 * var(--u));
+    background: var(--gold);
+    transform: rotate(45deg);
+    opacity: .85;
+    flex: none;
+  }
+
+  .sub{
+    margin: calc(13 * var(--u)) 0 0;
+    font-size: calc(9 * var(--u));
+    letter-spacing: calc(4.6 * var(--u));
+    text-indent: calc(4.6 * var(--u));
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 300;
+    color: #6c7a92;
+    white-space: nowrap;
+  }
+
+  /* ---------- 书页卡片 ---------- */
+  .card{
+    position: relative;
+    margin-top: calc(24 * var(--u));
+    width: calc(604 / 780 * 100%);
+    height: calc(326 * var(--u));
+    border-radius: calc(17 * var(--u));
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(120,150,210,.07), rgba(120,150,210,0) 60%),
+      linear-gradient(180deg, #182237 0%, #0b111d 100%);
+    box-shadow:
+      0 calc(34 * var(--u)) calc(80 * var(--u)) calc(-24 * var(--u)) rgba(0,0,0,.85),
+      0 0 0 1px rgba(232,206,150,.10) inset;
+    cursor: pointer;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* 金色描边（渐变 + 内描边） */
+  .card::before{
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(180deg, rgba(234,205,154,.62), rgba(234,205,154,.10) 70%, rgba(234,205,154,.22));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: 4;
+  }
+  .card::after{
+    content: ""; position: absolute; inset: calc(9 * var(--u));
+    border-radius: calc(11 * var(--u));
+    border: 1px solid rgba(235,210,165,.075);
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .bracket{
+    position: absolute; width: calc(16 * var(--u)); height: calc(16 * var(--u));
+    border-color: rgba(232,203,150,.42); border-style: solid; border-width: 0;
+    z-index: 4; pointer-events: none;
+  }
+  .bracket.tl{ left: calc(21 * var(--u));  top: calc(21 * var(--u));    border-left-width: 1px; border-top-width: 1px; }
+  .bracket.tr{ right: calc(21 * var(--u)); top: calc(21 * var(--u));    border-right-width: 1px; border-top-width: 1px; }
+  .bracket.bl{ left: calc(21 * var(--u));  bottom: calc(21 * var(--u)); border-left-width: 1px; border-bottom-width: 1px; }
+  .bracket.br{ right: calc(21 * var(--u)); bottom: calc(21 * var(--u));  border-right-width: 1px; border-bottom-width: 1px; }
+
+  /* 翻开时的光带 */
+  .sweep{
+    position: absolute; top: 0; bottom: 0; left: 0; width: 34%;
+    transform: translateX(-115%);
+    background: linear-gradient(90deg,
+      rgba(255,241,208,0) 0%,
+      rgba(255,241,208,.055) 32%,
+      rgba(255,241,208,.11) 50%,
+      rgba(255,241,208,.055) 68%,
+      rgba(255,241,208,0) 100%);
+    opacity: 0; pointer-events: none; z-index: 1;
+  }
+  .sweep::after{
+    content: ""; position: absolute; top: 6%; bottom: 6%; right: 0; width: 1px;
+    background: linear-gradient(180deg, rgba(255,246,220,0), rgba(255,246,220,.5), rgba(255,246,220,0));
+  }
+  .card.sweeping .sweep{ animation: sweep 640ms cubic-bezier(.32,.02,.28,1) forwards; }
+  @keyframes sweep{
+    0%{ transform: translateX(-115%); opacity: 0; }
+    12%{ opacity: 1; }
+    100%{ transform: translateX(310%); opacity: .9; }
+  }
+
+  /* ---------- 卡片内容 ---------- */
+  .center{
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0 calc(60 * var(--u));
+  }
+
+  /* 静候态 */
+  .idle{
+    display: flex; flex-direction: column; align-items: center;
+    transition: opacity .2s ease, transform .3s ease;
+  }
+  .idle.hide{ opacity: 0; transform: translateY(calc(-6 * var(--u))); }
+
+  .needle{
+    width: 1px; height: calc(34 * var(--u));
+    background: linear-gradient(180deg, rgba(232,206,150,.15), rgba(232,206,150,.62));
+    margin-bottom: calc(9 * var(--u));
+  }
+  .idle .dia{ margin-bottom: calc(22 * var(--u)); animation: twinkle 3.4s ease-in-out infinite; }
+  @keyframes twinkle{
+    0%,100%{ opacity: .55; transform: rotate(45deg) scale(1); }
+    50%{ opacity: .95; transform: rotate(45deg) scale(1.12); }
+  }
+
+  .ask{
+    margin: 0;
+    font-size: calc(22 * var(--u));
+    font-weight: 300;
+    letter-spacing: calc(2.6 * var(--u));
+    text-indent: calc(2.6 * var(--u));
+    color: #d9e1ee;
+  }
+  .then{
+    margin: calc(17 * var(--u)) 0 0;
+    font-size: calc(12.5 * var(--u));
+    letter-spacing: calc(1.8 * var(--u));
+    text-indent: calc(1.8 * var(--u));
+    color: #7c8ba3;
+  }
+
+  /* 答案态 */
+  .answer-wrap{
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 0 calc(75 * var(--u));
+    opacity: 0; visibility: hidden;
+  }
+  .answer-wrap.on{ opacity: 1; visibility: visible; }
+
+  .answer{
+    margin: 0;
+    max-width: 100%;
+    font-size: calc(44 * var(--u));
+    font-weight: 300;
+    line-height: 1.5;
+    letter-spacing: .01em;
+    color: var(--ink);
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+    text-wrap: balance;
+    filter: drop-shadow(0 0 calc(18 * var(--u)) rgba(232,206,150,.10));
+  }
+  .answer span{
+    display: inline-block;
+    white-space: pre;
+    opacity: 0;
+    transform: translateY(.16em);
+    filter: blur(calc(5 * var(--u)));
+    will-change: opacity, transform, filter;
+  }
+  .answer-wrap.reveal .answer span{
+    animation: ch 540ms cubic-bezier(.19,.72,.28,1) forwards;
+    animation-delay: calc(var(--i) * 28ms);
+  }
+  @keyframes ch{
+    to{ opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+
+  /* 下划线 */
+  .under{
+    display: flex; align-items: center; justify-content: center;
+    gap: calc(9 * var(--u));
+    margin-top: calc(24 * var(--u));
+    width: calc(196 * var(--u));
+    opacity: 0;
+  }
+  .under i{
+    flex: 1; height: 1px; transform: scaleX(0); transform-origin: center;
+    background: linear-gradient(90deg, rgba(232,206,150,0), rgba(232,206,150,.72), rgba(232,206,150,0));
+  }
+  .under .dia{ width: calc(5 * var(--u)); height: calc(5 * var(--u)); opacity: 0; }
+  .answer-wrap.reveal .under{ animation: fadeIn .4s ease forwards; animation-delay: var(--d); }
+  .answer-wrap.reveal .under i{ animation: grow 520ms cubic-bezier(.2,.7,.3,1) forwards; animation-delay: var(--d); }
+  .answer-wrap.reveal .under .dia{ animation: fadeIn .5s ease forwards; animation-delay: calc(var(--d) + 180ms); }
+  @keyframes grow{ to{ transform: scaleX(1); } }
+  @keyframes fadeIn{ to{ opacity: 1; } }
+
+  /* 页码 */
+  .page{
+    position: absolute; left: 0; right: 0; bottom: calc(30 * var(--u));
+    margin: 0; text-align: center;
+    font-size: calc(12 * var(--u));
+    letter-spacing: calc(1.4 * var(--u));
+    text-indent: calc(1.4 * var(--u));
+    color: #a08a57;
+    opacity: 0;
+    z-index: 3;
+  }
+  .answer-wrap.reveal .page{ animation: fadeIn .6s ease forwards; animation-delay: var(--dp); }
+
+  /* 立即完成 */
+  .answer-wrap.instant .answer span,
+  .answer-wrap.instant .under,
+  .answer-wrap.instant .under i,
+  .answer-wrap.instant .under .dia,
+  .answer-wrap.instant .page,
+  .answer-wrap.done .answer span,
+  .answer-wrap.done .under,
+  .answer-wrap.done .under i,
+  .answer-wrap.done .under .dia,
+  .answer-wrap.done .page{
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  /* ---------- 底部 ---------- */
+  .hint{
+    margin-top: calc(42 * var(--u));
+    font-size: calc(12.5 * var(--u));
+    letter-spacing: calc(2 * var(--u));
+    text-indent: calc(2 * var(--u));
+    color: #8997b0;
+    animation: hintPulse 4.2s ease-in-out infinite;
+    transition: opacity .25s ease;
+  }
+  @keyframes hintPulse{ 0%,100%{ opacity: .72; } 50%{ opacity: 1; } }
+
+  .foot{
+    margin-top: calc(38 * var(--u));
+    font-size: calc(10.8 * var(--u));
+    letter-spacing: calc(1.4 * var(--u));
+    text-indent: calc(1.4 * var(--u));
+    color: #646f83;
+  }
+  .foot b{ font-weight: 400; color: #7d899e; }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position: fixed; left: 50%; bottom: calc(46 * var(--u)); z-index: 20;
+    transform: translate(-50%, calc(10 * var(--u)));
+    padding: calc(9 * var(--u)) calc(19 * var(--u));
+    border-radius: 999px;
+    border: 1px solid rgba(232,206,150,.22);
+    background: rgba(16,23,36,.9);
+    backdrop-filter: blur(6px);
+    font-size: calc(12 * var(--u));
+    letter-spacing: calc(.6 * var(--u));
+    color: #e0d4be;
+    opacity: 0; pointer-events: none;
+    transition: opacity .22s ease, transform .22s ease;
+  }
+  .toast.on{ opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-height: 560px){
+    .foot{ display: none; }
+    .hint{ margin-top: calc(24 * var(--u)); }
+  }
+
+  /* 竖屏 / 窄屏：卡片拉高、字号放大，避免大片空白 */
+  @media (max-aspect-ratio: 1/1){
+    :root{ --stage: min(760px, 92vw); }
+    .stage{ padding-top: max(8vh, 44px); }
+    .card{ width: 100%; height: max(calc(326 * var(--u)), 42vh); }
+    h1{ font-size: clamp(20px, 6.2vw, 28px); letter-spacing: .24em; text-indent: .24em; }
+    .sub{ font-size: clamp(7px, 2.1vw, 9px); }
+    .rule{ width: 46%; }
+    .ask{ font-size: clamp(17px, 4.9vw, 22px); }
+    .then{ font-size: clamp(11px, 3.2vw, 13px); }
+    .hint{ font-size: clamp(11px, 3.3vw, 13px); margin-top: calc(34 * var(--u)); }
+    .foot{ font-size: clamp(9.5px, 2.9vw, 11px); }
+    .page{ font-size: clamp(9.5px, 2.9vw, 12px); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .aura, .idle .dia, .hint{ animation: none; }
+    .answer span, .under, .under i, .under .dia, .page{ animation-duration: .01ms !important; animation-delay: 0ms !important; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <div class="aura" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main class="stage">
+    <h1>答案之书</h1>
+    <div class="rule" aria-hidden="true"><i></i><span class="dia"></span><i></i></div>
+    <p class="sub">THE BOOK OF ANSWERS</p>
+
+    <section class="card" id="card" role="button" tabindex="0" aria-label="翻开一页，得到一个答案">
+      <span class="bracket tl" aria-hidden="true"></span>
+      <span class="bracket tr" aria-hidden="true"></span>
+      <span class="bracket bl" aria-hidden="true"></span>
+      <span class="bracket br" aria-hidden="true"></span>
+      <div class="sweep" aria-hidden="true"></div>
+
+      <div class="center">
+        <div class="idle" id="idle">
+          <span class="needle" aria-hidden="true"></span>
+          <span class="dia" aria-hidden="true"></span>
+          <p class="ask">在心中默念你的问题</p>
+          <p class="then">然后，按下空格</p>
+        </div>
+
+        <div class="answer-wrap" id="wrap" aria-hidden="true">
+          <p class="answer" id="answer"></p>
+          <div class="under" aria-hidden="true"><span class="dia"></span><i></i><span class="dia"></span></div>
+          <p class="page" id="page">第 0000 页</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="hint" id="hint">按下空格 · 或轻点书页</div>
+    <div class="foot">本书收录 <b>1,476</b> 则答案 · v0.1 · 好话版</div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div id="live" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var ANSWERS = ["是的","会的","当然","毫无疑问","答案已经很明显","这是对的","值得一试","你不必怀疑","它会成真","一切都会好的","正是如此","你心里早就有答案","去做，结果会好","这一次会顺利","命运站在你这边","是时候了","可以，放心","它比你想象的容易","你等的那件事会来","会有人站在你这边","你配得上","这段路是通的","答案是肯定的","趋势对你有利","你已经准备好了","不必再问第二次","不要犹豫","好的事情正在靠近","这正是你想要的","你担心的不会发生","它会以另一种方式实现","先相信，再看见","是的，而且比你想的更好","门是开着的","你等的回应会来","这次能成","你可以的","你会被理解","转机就在前面","它值得你等","你会赢","这件事会圆满","这一次，别错过","你猜对了","一切都对","会是好结局","时机正好","你比昨天更接近它","会顺利通过的","它就是你要找的","放手去做吧","选择它不会错","这条路是对的","放心，有回音","你会如愿","对方也是这么想的","机会确实是给你的","它已经在路上了","你没有被辜负","笑起来吧，是好消息","会通过的","他说的是真的","这颗种子会发芽","你可以说实话","今年的运气不错","这件事值得庆祝","你会被选中","往前走就对了","你会得到第二次机会","是","对","好","可以","行","嗯，是","确实","当然可以","一定","必成","应该会","我看见了光","有希望","希望很大","你值得","值得","能成","会好的","没问题","如愿","吉","顺","宜","可","赞","准","稳","会实现","它有未来","你被祝福着","这一次是真的","结果偏向你","它愿意向你走来","这条路有光","你的直觉是对的","对的人在对的时间","可以答应","可以开口","可以等，也可以追","你可以再贪心一点","你不必退让","说出口吧","它会回应你","这一刻属于你","顺水","顺风","顺意","水到渠成","瓜熟蒂落","水落石出","柳暗花明","云开见月","守得云开","静待花开","花会开","月亮会圆的","春天会来","太阳照常升起","风会转向你","风向变了，是好的方向","星象支持你","命里有","有缘","有份","有天意","天助","人和","大势所成","此路可行","此法可用","此人可信","此时可为","此处可留","此心可托","此行有益","此问有解","它已经在敲门","听听门外的声音","你几乎已经说出来了","就是那个念头","别删掉那句话","第一个想到的就是答案","你猜的那个是","是的，不是别人","再靠近一点","摸摸口袋，你已经有了","你早就决定了","那是你的真心","当真","成立","有效","通过","及格","可以开始","可以期待","可以相爱","可以被爱","可以得到","会回头","会重逢","会被记住","会有人懂","时间会证明你是对的","三年后再看，你会笑","未来的你会感谢现在","值得你押上","值得你冒险","值得你认真","值得你坦白","值得你花时间","值得你等一等","值得你哭一场","值得你写下来","再等等","时候未到","快了","就在这个月","下个月会明朗","明年会不同","三天内会有消息","七天之内见分晓","今晚就有答案","明天再问","现在不是时候","太早了","不早不晚","刚刚好","晚一点更好","先等风来","等一个信号","等雨停","等雪化","等春天","等一个合适的下午","等一杯茶凉","等对方先说","等第三次机会","等的是你自己","耐心一点","耐心是答案","别催，会来","催不得","水还没开","火候未到","种子在土里","时机在酝酿","再撑一会儿","再多撑一天","撑过这周","撑过去就好","转折在第五天","三个月后","半年后","一年后再说","三年后有答案","几年后你会笑","不急，还早","急也没用","早问早了","时间会回答","时间会给你答案","时间会改写问题","时间不对，人对了","人对了，时机没到","你在等它，它在等你","差一点点","只差一步","只差一个人开口","只差一个电话","只差一句道歉","只差一次回头","差的是一个决定","就差你点头","再等一个红绿灯","等下一次月圆","等潮水退去","等尘埃落定","等消息落地","等风评过去","等情绪过去","等睡醒","等明天太阳","等一个电话","等一条回复","等那扇门自己开","等有人先开口","等它自然发生","不要催，不要追","顺其自然，自然会出现","时机正在靠近","它正在路上","它比别人慢半拍","慢一点是对的","快一点也没用","你现在问，太早","回头再问","隔一段时间再问","过一阵子再说","等下个月再说","等这件事冷下来","等大家都冷静","等一个合适的场合","等一个有月亮的晚上","等一场雨","等一阵风","等到花开","等到雪落","等到夏天","等到年末","等一个转机","等一个台阶","等一个理由","等一句\"对不起\"","等它先低头","等它先动","等它自己回来","等它自己走","不是现在，但会是","会，只是不在今年","会晚，但会到","迟到总比不到好","不会缺席，只会迟到","机会在第二次","下一班车","下一轮","下次一定","这次不行，下次可以","错过的会以另一种方式回来","现在是积累的时候","现在是等待的时候","现在是沉默的时候","现在是学习的时候","现在是回家的时候","现在是睡觉的时候","现在什么都别做","静候","稍安","勿躁","且慢","缓一缓","停一停","歇一歇","放一放","搁一搁","来日方长","后会有期","留待下次","待时而动","蓄势待发","厚积薄发","十年不晚","刚好赶上","还来得及","来得及","不着急","来得及，慢慢来","别赶路","路还长","时间站在你这边","再等一个冬天","等下雪","等开春","等入秋","等到三十岁","等到你想清楚","等你不那么想的时候","等你不缺它的时候","等你不需要答案的时候","再等三分钟","再等一天","再等一个季度","等到下个生日","等到假期结束","去做","现在就做","立刻","马上","先做再说","做了才有答案","行动就是答案","迈出第一步","先走一步","先开口","先联系","先道歉","先低头不丢人","先付出","先试三天","先试一个月","试一次","再做一次","再试一遍","换个方法试","换个人问","换个地方","换条路走","走出去","离开","出发","订票","收拾行李","请假","辞职","表白","拒绝","答应","报名","开始","动手","去问","去见他","去见她","去道歉","去解释","去争取","去要","去拿","去追","去学","去练","去赚","去存","去花","去旅行","去搬家","去剪头发","去体检","去睡觉","去吃顿好的","去晒晒太阳","去跑步","去山上","去看海","去见面","去拥抱","去说\"我爱你\"","去说\"对不起\"","去说\"我走了\"","去说\"我留下\"","去说\"不\"","去把话说完","去把信寄出","去把电话打过去","去把那句删了重写","主动一点","主动联系","主动示好","主动认错","主动退出","主动放手","主动开口","主动约","主动问","主动给","主动还","主动拒绝","主动争取","主动承认","主动道歉","主动结束","主动开始","马上回复","马上回电话","马上出发","马上去做","今天完成","今天开始","今天就说","这周搞定","今晚就发","明天就办","别想了，去做","别计划了，开始","别准备了，够了","别等完美","先完成，再完美","先做最丑的版本","先跑起来","先上车","先付款","先付定金","先发出去","先说话","先微笑","先伸手","先听","先看完","先读完","先算完","先想清楚再动","想清楚了吗，那就动","想了三天就够","犹豫就是答案","不做也是决定","选择不做，就别后悔","选一个","挑一个","定下来","拍板","签字","按下发送","按下拨号","按下确认","按下删除","按下开始","按下停止","现在就开始计时","设个闹钟","写下来","列个清单","打三个电话","发五条消息","减少一半","加倍","再快一点","再深一点","再远一点","再试最后一次","坚持三十天","坚持到年底","坚持到看见结果","别停","继续","接着来","再来一次","重来","从头开始","推倒重来","更新","升级","换新","整理","清理","断舍离","扔掉","删掉","关掉","退出登录","卸载","解除","解约","退款","退货","掉头","绕开","跳过","越过","爬过去","游过去","走过去","跑过去","冲过去","你只需要开始","你只需要说出口","你只需要按下那个键","你只需要先转身","你只需要关掉手机","你只需要睡一觉","你只需要再问一次","你只需要相信一次","你只需要多等一天","你只需要少说一句","你只需要多做一点","你只需要少想一点","你只需要松手","你只需要抬手敲门","你只需要迈过那道坎","你只需要承认你怕","你只需要说出真话","你只需要承认想要","你只需要先爱自己","先迈左脚","先迈右脚","先关电脑","先订一张票","先回那条消息","先原谅一次","先做十分钟","先做一件小事","先做最要紧的那件","先做能做的","先做不难的","先做你怕的那件","问问他怎么想","她也在想同样的事","他其实在乎","他只是不会说","他不是不在意，是不知道","他还在犹豫","他怕被拒绝","她怕失去你","你们都想多了","你们都太骄傲","你们都在等对方","你们需要谈一次","你们需要一次坦白","你们之间差一句真话","你该提高标准","你该说出你的需要","你该学会拒绝","你该学会示弱","你该学会求助","你该学会独处","你该先爱自己","他是过程","他是镜子","他会教你一些事","这段关系值得","这段关系值得修","朋友比恋人更长久","先做朋友","先做同事","保持距离","保持联系","保持沉默","保持体面","保持边界","远离消耗你的人","靠近让你变好的人","他在等你先说","他在观察你","你在他心里有位置","他记得你","他会回来找你","他会先开口","会有人先表白","会有人后悔","会有人说想你","会有人突然出现","你的旧朋友会联系你","你会认识新的人","你会被看见","你会被珍惜","你会原谅他","你会原谅自己","他值得再给一次机会","给他一次机会","给他最后一次机会","听他的行动，不是他的语言","看细节，别看承诺","看他在你不在的时候","看他对弱者的态度","看他对钱的态度","看他对家人的态度","看他的朋友","信任一次，但记住教训","先说清楚再决定","先不要联系人","先别拉黑","先别删","先发消息","先约一次","先见面","先吃顿饭","送一份礼物","写一封信","打一个电话","说一句谢谢","说一句对不起","说一句我错了","说一句我想你","说一句我需要你","说一句我准备好了","说一句我不愿意","说一句再见","说一句\"我们谈谈\"","说一句\"就这样吧\"","别替对方做决定","别猜","别读心","直接问","坦白讲","讲真话","讲难听的真话","轻一点说","好好说话","换个态度说","不听解释，听语气","看他愿不愿意为你花时间","看他愿不愿意为你花钱","看他愿不愿意承认你","你值得被公开","你值得被优先","你值得被哄","你值得被等","你值得更好的人","他不是唯一","她不是全部","会有第二个人","会有更好的人","会有人接住你","会有人喜欢真实的你","会有人喜欢安静的你","会有人喜欢你现在的样子","别为不爱你的人改变","别为一句喜欢做傻事","别把友情当爱情","别把关心当喜欢","别把寂寞当心动","别把感动当爱","别把不甘心当爱","别把习惯当爱","别把执念当深情","先处理情绪，再处理关系","先问自己要什么","先问他要什么","先问他怕什么","先问自己怕什么","在一起试试","分开试试","冷静一个月","给彼此空间","给彼此一个台阶","给彼此最后一次机会","你们还差一点勇气","你们已经足够努力","你们只是太累了","你们该重新认识一次","珍惜眼前这个人","眼前这个人就是答案","换个角度看那个人","他也有他的难","她也在等你一句软话","先别急着分手","先别急着和好","先别急着结婚","见一面再说","不见也好","联系一次就好","放下比追问体面","体面地退场","体面地留下","坦率一点","诚实一点","温柔一点","硬气一点","别怕","别急","别慌","别慌，来得及","深呼吸","慢一点","放轻松","别想太多","别自己吓自己","别内耗","别比较","别嫉妒","别怨","别恨","别后悔","别硬撑","允许自己脆弱","允许自己犯错","允许自己休息","允许自己普通","允许自己难过三天","允许自己爽约一次","允许自己不回复","允许自己哭","允许自己慢","允许自己改变主意","允许自己重新开始","允许自己不完美","允许自己不被所有人喜欢","接受它","接受现实","接受失去","接受不完美","接受你控制不了它","接受它已经发生","接受它可能不会发生","接受自己现在的样子","你已经很好了","你已经做得很好了","你已经尽力了","你已经比昨天好","你比你想的强","你比你以为的勇敢","你比别人的评价重要","你不必向任何人证明","你不必一直坚强","你不必马上好起来","你不必原谅","你不必合群","你不必懂事","你不必完美","你不必讨好","你不必解释自己","你不必为了谁委屈","你不必活成他们期待的样子","先照顾好自己","先吃饭","先睡觉","先喝水","先洗个澡","先出门走走","先哭一场","先骂一句","先放过自己","先原谅自己","先原谅他","先跟过去告别","先跟身体和解","先跟妈妈打个电话","先给自己放个假","先给自己买束花","先给自己一个拥抱","先给自己一点时间","慢下来","停下来","安静下来","坐下来","躺下来","看看天","看看云","看看树","看看海","看看月亮","看看星星","看看镜子里的自己","笑一笑","哭出来","说不出来就写下来","写下来就好","说出来就好","动起来就好","睡一觉就好","明天就好了","会过去的","这一切都会过去","痛会过去","遗憾会留下一点点","难过是正常的","难过不会要你的命","失望是被允许的","失败不算什么","被拒绝不算什么","丢脸不算什么","错过了不算什么","你还有时间","你还有选择","你还有自己","你还有朋友","你还有明天","你还有别的路","你可以重来","你可以改变","你可以说不","你可以慢一点","你可以不回答","你可以先逃一会","你可以先不管它","你可以先笑","你可以先自由","你可以先做喜欢的事","你可以不勇敢","你可以后悔，但别回头","你不孤单","有人在等你","有人在想你","有人记得你","有人偷偷支持你","有人会来","有些人不来也没关系","没关系","没关系，真的","不要紧","不是大事","没那么严重","没那么重要","没那么多人看你","别人没你想的那么在意","别人的评价不是你的定义","别人的成功不是你的失败","别人的进度不是你的时钟","你的节奏就是对的","你的选择也有道理","你的感受是真实的","你的努力有人看见","你的善良会有回响","你的难过值得被认真对待","你的直觉全对","你的直觉在保护你","你的身体在提醒你","你的沉默也有力量","你的温柔要留给对的人","做个温柔的人","做个清醒的人","做个愿意等的人","做个肯认输的人","做个会开心的人","做个不解释的人","做个先走的人","做个守约的人","做个诚实的人","做个轻松的人","做个普通人","做个自由的人","做点没用的事","做点开心的事","做点小事","做点好事","做点运动","做点饭","做点梦","今天先开心","今天先不管","今天先休息","今天先爱自己","先睡够八小时","先晒太阳","先出门","先洗头","先换件衣服","先听完这首歌","先看完这部电影","先笑出声","先原谅这个世界一次","先承认你不甘心","先承认你想他","先承认你怕孤独","先把那句话说给自己听","风会告诉你","听风","看云","云在走","月亮知道","月亮会替你说","星星看着呢","雨停了再说","第一场雪","雪落时见分晓","春天有答案","夏至之后","秋分那天","冬至夜","子时","午夜十二点","第七天","第三天","第二天早上","第二天下午","下一个整点","下一个红绿灯","下一班地铁","下一站","十字路口","第三个路口右转","回头的那一秒","你抬头的那一瞬","镜子里的那个人","你丢的那把钥匙","你留下的那盏灯","门口的那双鞋","窗外的树","楼下的猫","天上的飞机","路过的车","那首歌","那本书的第七页","抽屉最里面","旧照片背面","相册的最后一页","聊天记录第 99 条","日历上的那一天","你手边的杯子","你的左手","你的心口","你的后颈发凉的那一刻","你突然想起的那个人","你反复做的那个梦","梦里那扇门","梦里那道光","那阵香味","那个熟悉的背影","你不敢看的那条消息","你没发出去的那条","你删掉的那段话","你写了一半的信","你收藏夹里的第一个","你第一次心动的地方","你们第一次见面的街角","同一片海","同一场雨","同一轮月亮","下一场雨","下一场雪","下一个春天","下一阵风","光会来","灯会亮","门会开","窗会开","潮会退","雪会停","雨会走到","路会显出来","雾会散","夜会过去","天亮之前最黑","破晓前有回声","有光的地方就有答案","跟着光走","跟着感觉走","跟着心走","跟着猫走","跟着声音走","跟着那首歌走","跟着第一眼","跟着直觉","跟着心跳","向左","向右","往前","往上","往下","原地","绕一圈","倒着走","转过身","低下头","抬起头","闭上眼","睁开眼","数到三","数到七","数到十","数到一百","再数一遍","掷一次骰子","抽一张牌","翻到哪页算哪页","随手翻开","闭眼翻","随便指一个","第一次指到的那句","第一个念头","第一直觉","第一句话","第一个电话","第一个答应的人","最后一个才知道","最后一个站出来","最后面的那句话","书页的折角","那句划了线的话","那句你忘了的歌词","梦里有人说过","有人已经告诉过你","你自己说过","你写在生日愿望里","你写在便签上的","你写在备忘录最后一页","刮风的日子","下雨的凌晨","起雾的早晨","出太阳的下午","安静的深夜","清晨五点","黄昏六点","月圆","月缺","满月之后","新月","日食","彗星经过","三颗星排成一线","流星","许个愿","许愿要小声","等","走","留","试","换","舍","取","收","缓","静","问","答","有","成","半","全","易","近","远","早","晚","允","信","真","深","浅","多","少","快","慢","进","守","攻","来","去","聚","圆","明","开","关","起","升","安","得","合","分","续","念","遇","迎","再想想","再试一次","慢慢来","会好","能行","可以吧","大概吧","也许","或许","可能","未必","不一定","看情况","你来定","你说了算","你做主","你决定","你选","你挑","你问自己","你问心","问你自己","问清楚","问到底","问第二次","问对的人","问最重要的人","问你不怕的那个人","问了就知道","不问也知道","不问也罢","知道就好","不知道也好","知道了会轻松","知道了就去做","知道就够","已经够了","够了","太多了","差一点","差不多","不远了","很近了","到了","还没到","正在到","会到的","该到了","轮到你","下一个","这一次","下次","最后一次","第一次","唯一一次","就这一次","不止一次","一次就够","两次就太多","三次就结束","别数了","数不清","重要","很重要","非常","还行","不错","很好","一般","过得去","说得过去","差不多就行","这样就好","就这样","就这样吧","随它去","由它去","让它去","让它来","让它走","让它过去","过去了","过去就好","好起来","慢慢好","真的会","我相信","你相信就好","信则有","心诚则灵","问就是还爱","问就是答案","这事没那么急","你已经做得够多了","有人在替你扛","会有人先松口","你不必今天就决定","先让这件事过夜","会有第二次机会","这次不算数","换个说法就通了","差的不是能力","你缺的是休息","你缺的是一句道歉","你缺的是钱，不是勇气","这次先顾自己","先把身体养好","先把觉补回来","你的身体在替你拒绝","别再解释了","说一次就够了","你已经说过三遍","对方其实听懂了","她只是不知道怎么回","你被低估了","你被高估了","你会被重新认识","有人正在改变对你的看法","这件事会自己解决一半","剩下的那一半要你动手","这一次时间站在你这边","时间不会一直等你","别等完美版本","现在这个版本就行","先发出去，再改","先见一面，再决定","先吃个饭再说","先睡一觉再想","先走两步看看","先把门关上","先开一扇窗","先说一半，留一半","说出来，哪怕说得难听","你们只是节奏不一样","他需要你先给个台阶","她需要你多问一句","你们适合做朋友","你们会重新联系","他会先点赞","有人比你更在意这段关系","表白至少让你死心","沉默已经是一种回答","不回复也是一种回复","她发那条朋友圈是给你看的","他问\"在干嘛\"就是想你了","他记得你不吃香菜","她记得你的生日","你喜欢的是他，还是被他喜欢","你爱的是你以为的他","那不是你的活儿","你可以开口要","你可以先不签","你会找到更好的","你会被挖走","这次跳槽不算冒险","这笔钱回得来","你会还清","你会多一笔收入","别和熟人做生意","别把爱好当饭吃","先做副业","先存钱再辞职","你需要一次长睡","你需要一次远行","你需要一顿好饭","你需要剪个头发","你需要换个环境","你需要有人听你说话","你需要一个人待着","你需要被夸一次","你需要哭出来","你需要喊一声","你需要停下来","你的胃在替你说不","你的手机该放下了","你的房间该收一收","你的作息该改了","你的朋友会拉你一把","你的家人会担心你","你的猫知道你不开心","你的直觉没骗过你","你问的是\"要不要\"，其实是\"敢不敢\"","你其实想问的不是这个","你在等一句\"随你\"","你不需要许可","你不需要所有人点头","你只需要一个人支持","你已经知道该怎么做了","你只是需要有人说\"去吧\"","这次不必赢，只要不输","赢了也没什么","输了也没关系","会有人替你高兴","会有人替你可惜","你会被记住很久","这不是什么大事","这也不是什么小事","你要的太多了","其实你要的一点都不多","换个地方，答案会不一样","同一天里你会改主意","过两天你会觉得可笑","一年后你会感谢今天","这件事没有你想的那么严重","你只是累了，不是不行","你只是怕，不是不能","怕就怕着去做","你可以边怕边做","你可以先做一半","你可以中途退出","你可以反悔一次","你可以不接那个电话","你可以不回那条消息","你可以不参加","你可以不下车","你可以不下单","你可以不解释就走","你可以带着遗憾继续","你可以先说\"我不知道\"","你可以先认输一会儿","你可以慢，但不能停","天气不好就别出门","吃好睡好，事就成了","钱能解决的事先别急","急事慢做","大事看天，小事看脸","该你的跑不掉","不该你的求不来","人情留一线","话说三分满","饭吃七分饱","路走七分快","日子是自己的","别拿别人的尺子量自己","你过得好，就是回答","时间会给所有人一巴掌","吃亏要趁早","早点看清比晚点清醒好","你现在的难，是以后的谈资","三年后你会笑出声","十年后不值一提","别为十年前的事生气","别为十年后的事发愁","今天的事今天做完","明天的事明天再说","该花的钱别省","该省的心别费","该断的关系别拖","该留的人别推","有人值得你等","有人不值得你等","别在最难的时候做决定","别在最顺的时候下重注","顺的时候别飘","难的时候别崩","忍一忍，风就过去了","让一让，路就宽了","求人不如求己","求己不如先睡","把话说慢一点","把事做小一点","把期待放低一点","把日子过糊涂一点","别跟自己较劲","别跟时代较劲","别跟天气较劲","别跟已经发生的事较劲","能改的就改","改不了的就认","认不了的就躲","躲不了的就扛","扛完了就放下","放下就不用再提","提起来也不疼了","疼也就疼一阵","一阵就过去了","过去了就别说","说了就成故事","故事讲三遍就淡了","淡了就可以笑","笑了就算赢了","赢了也带不走","带不走的就别攥着","攥着的手没法牵人","松开一点试试","留一点余地给自己","留一点好处给别人","留一点秘密给明天","人心是热的","人心也是会凉的","热的时候别泼水","凉的时候别硬捂","会疼说明还活着","会怕说明还有在乎","会在乎说明还没麻木","还没麻木就还有救","有救就别急","急了容易出错","错了就认","认了就改","改了就算了","算了就往前","往前看三步","回头看一眼","一眼就够","够了就停","停下来喝口水","水喝完再说","说完就做","做了才知道","知道也不晚","晚也不怕","怕就慢慢来","慢慢来比较快","快的时候容易摔","摔了拍拍土","土拍干净继续走","走在路上就好","好过站在原地想","想一万遍不如走一步","一步就够","够不够看你自己","你自己说了算","算不清就别算","别算那些旧账","旧账越算越冷","冷了就生火","火边坐一会儿","一会儿天就亮了","亮了就出门","出门就会遇到人","遇到人就打个招呼","招呼打多了就熟了","熟了就有路","路都是人走出来的","走不通就换一条","换一条也不是认输","认输也是一种赢","赢在自己心里","心里踏实最重要","踏实了睡得着","睡得着就什么都好办","好办的事先办","难办的事拆开办","拆开了就不难","不难就敢动手","动手就有结果","结果可能不如意","不如意也正常","正常的事别慌","慌也解决不了","解决不了就放一放","放久了会自己长好","长不好的就割掉","割掉会疼","疼完就轻了","轻了才走得远","远了才知道家好","家好就早点回","回去吃顿饭","饭桌上什么都好说","说了就都明白了","明白了就别再问","问了也是这个答案","这个答案你早就知道","去做就对了","对了就别回头","回头也别后悔","后悔也没用","没用的事少做","少做就少错","少错就多赢","多赢几次人就稳了","稳了就别飘","飘了就摔","摔了记得爬起来","爬起来就算赢","赢不赢不重要","重要的是还在场上","在场就有机会","机会来了别躲","躲了会后悔","后悔也要认","认了就行","行不行先试","试了才知道"];
+
+  var card  = document.getElementById("card");
+  var idle  = document.getElementById("idle");
+  var wrap  = document.getElementById("wrap");
+  var ans   = document.getElementById("answer");
+  var page  = document.getElementById("page");
+  var hint  = document.getElementById("hint");
+  var toastEl = document.getElementById("toast");
+  var live  = document.getElementById("live");
+
+  var DECK = [];
+  var pos = 0;
+  var current = "";
+  var phase = "idle";           // idle | animating | answered
+  var timers = [];
+  var toastTimer = 0;
+
+  function shuffle() {
+    DECK = [];
+    for (var i = 0; i < ANSWERS.length; i++) DECK.push(i);
+    for (var j = DECK.length - 1; j > 0; j--) {
+      var k = Math.floor(Math.random() * (j + 1));
+      var t = DECK[j]; DECK[j] = DECK[k]; DECK[k] = t;
+    }
+    pos = 0;
+  }
+  shuffle();
+
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+  function clearTimers() { for (var i = 0; i < timers.length; i++) clearTimeout(timers[i]); timers = []; }
+
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("on"); }, 1700);
+  }
+
+  function unit() { return card.clientWidth / 604; }
+
+  function fontFor(text) {
+    var n = text.length;
+    if (n <= 1) return 86;
+    if (n <= 2) return 74;
+    if (n <= 4) return 58;
+    if (n <= 8) return 44;
+    if (n <= 12) return 37;
+    return 32;
+  }
+
+  function render(text, pageNo) {
+    ans.innerHTML = "";
+    var chars = Array.from(text);
+    for (var i = 0; i < chars.length; i++) {
+      var s = document.createElement("span");
+      s.textContent = chars[i];
+      s.style.setProperty("--i", i);
+      ans.appendChild(s);
+    }
+    ans.style.fontSize = (fontFor(text) * unit()).toFixed(2) + "px";
+    page.textContent = "第 " + String(pageNo).padStart(4, "0") + " 页";
+  }
+
+  function applyScale() {
+    if (!current) return;
+    ans.style.fontSize = (fontFor(current) * unit()).toFixed(2) + "px";
+  }
+
+  function draw() {
+    if (phase === "animating") { finish(); return; }
+
+    if (pos >= DECK.length) { shuffle(); toast("已翻过一整轮 · 重新洗牌"); }
+    clearTimers();
+
+    var idx = DECK[pos];
+    current = ANSWERS[idx];
+    var pageNo = idx + 1;          // 页码与答案绑定：这一则永远在它自己的那一页
+    pos++;
+    render(current, pageNo);
+
+    idle.classList.add("hide");
+    wrap.classList.remove("reveal", "instant", "done");
+
+    // 光带扫过
+    card.classList.remove("sweeping");
+    void card.offsetWidth;
+    card.classList.add("sweeping");
+
+    phase = "animating";
+    hint.style.opacity = "0";
+    hint.textContent = "\u2026";
+
+    var n = current.length;
+    var d = n * 28 + 240;
+
+    wrap.style.setProperty("--d", d + "ms");
+    wrap.style.setProperty("--dp", (d + 320) + "ms");
+
+    later(function () {
+      wrap.classList.add("on");
+      wrap.classList.add("reveal");
+      idle.style.display = "none";
+      hint.textContent = "再按一次空格 · 再问一个";
+      hint.style.opacity = "";
+      phase = "answered";
+      live.textContent = current;
+      // 兜底：动画被打断/禁用时也要落到终态
+      later(function () { wrap.classList.add("done"); }, n * 28 + 760);
+    }, 430);
+
+    later(function () {
+      card.classList.remove("sweeping");
+      phase = "answered";
+    }, 1120);
+  }
+
+  function finish() {
+    clearTimers();
+    wrap.classList.add("on");
+    wrap.classList.remove("reveal");
+    wrap.classList.add("instant");
+    card.classList.remove("sweeping");
+    hint.textContent = "再按一次空格 · 再问一个";
+    hint.style.opacity = "";
+    phase = "answered";
+    live.textContent = current;
+  }
+
+  function copy() {
+    if (!current) return;
+    var done = function () { toast("已复制"); };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(current).then(done, fallback);
+    } else {
+      fallback();
+    }
+    function fallback() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = current;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.top = "-100px";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+      } catch (e) { toast("复制失败"); }
+    }
+  }
+
+  // ---------- 事件 ----------
+  card.addEventListener("click", function (e) { e.preventDefault(); draw(); });
+  card.addEventListener("keydown", function (e) {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!e.repeat) draw();
+    }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.repeat) return;
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      draw();
+    } else if (e.key === "c" || e.key === "C") {
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) copy();
+    }
+  });
+
+  window.addEventListener("resize", applyScale);
+
+  // ---------- 尘埃 ----------
+  var cv = document.getElementById("dust");
+  var ctx = cv.getContext("2d");
+  var motes = [];
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function initDust() {
+    cv.width  = Math.floor(innerWidth * dpr);
+    cv.height = Math.floor(innerHeight * dpr);
+    cv.style.width = innerWidth + "px";
+    cv.style.height = innerHeight + "px";
+    motes = [];
+    var count = Math.round(Math.min(56, Math.max(22, innerWidth / 26)));
+    for (var i = 0; i < count; i++) {
+      motes.push({
+        x: Math.random() * innerWidth,
+        y: Math.random() * innerHeight,
+        r: 0.6 + Math.random() * 1.5,
+        vy: -(0.06 + Math.random() * 0.22),
+        vx: (Math.random() - 0.5) * 0.12,
+        a: 0.05 + Math.random() * 0.16,
+        ph: Math.random() * Math.PI * 2,
+        gold: Math.random() < 0.55
+      });
+    }
+  }
+
+  function frame(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    var time = t / 1000;
+    for (var i = 0; i < motes.length; i++) {
+      var m = motes[i];
+      m.y += m.vy;
+      m.x += Math.sin(time * 0.32 + m.ph) * 0.06 + m.vx;
+      if (m.y < -12) { m.y = innerHeight + 12; m.x = Math.random() * innerWidth; }
+      var a = m.a * (0.55 + 0.45 * Math.sin(time * 0.6 + m.ph));
+      if (a <= 0.004) continue;
+      ctx.beginPath();
+      ctx.globalAlpha = a;
+      ctx.fillStyle = m.gold ? "#e8ce9e" : "#c8d6f0";
+      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  }
+
+  initDust();
+  window.addEventListener("resize", initDust);
+  if (!reduce) requestAnimationFrame(frame);
+  else { /* 静态光尘：只画一帧 */ requestAnimationFrame(function (t) { frame(t); }); }
+
+  // ---------- 预览参数：?preview=文字&page=12 / ?auto=1 ----------
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.has("auto")) {
+      setTimeout(draw, 80);
+    } else if (q.has("preview")) {
+      var txt = q.get("preview") || "答案在你决定不再问的那一刻";
+      current = txt;
+      render(txt, parseInt(q.get("page") || "77", 10));
+      idle.style.display = "none";
+      wrap.classList.add("on", "instant");
+      wrap.style.setProperty("--d", "0ms");
+      wrap.style.setProperty("--dp", "0ms");
+      hint.textContent = "再按一次空格 · 再问一个";
+      phase = "answered";
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
